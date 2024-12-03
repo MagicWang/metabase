@@ -63,6 +63,8 @@ import type {
 } from "metabase-types/api";
 import type { Dispatch, GetState } from "metabase-types/store";
 
+import { onUpdateDashCardVisualizationSettings } from "./core";
+
 export const FETCH_DASHBOARD_CARD_DATA =
   "metabase/dashboard/FETCH_DASHBOARD_CARD_DATA";
 export const fetchDashboardCardDataAction = createAction<{
@@ -287,7 +289,27 @@ export const fetchCardDataAction = createAsyncThunk<
     };
 
     // make the actual request
-    if (datasetQuery.type === "endpoint") {
+    if (dashcard.visualization_settings?.iframe) {
+      const regexpArr = /src="(\S*)"/.exec(
+        dashcard.visualization_settings.iframe,
+      );
+      const iframeUrl = regexpArr?.length ? regexpArr[1] : "";
+      const url = new URL(iframeUrl);
+      const deptParams = dashboard.parameters?.find(
+        l => l.values_query_type === "cascader",
+      );
+      if (deptParams) {
+        url.searchParams.set(
+          deptParams.slug,
+          (parameterValues[deptParams.id] as any) || [],
+        );
+      }
+      (window as any).Metabase.store.dispatch(
+        onUpdateDashCardVisualizationSettings(dashcard.id, {
+          iframe: `<iframe src="${url.href}" />`,
+        }),
+      );
+    } else if (datasetQuery.type === "endpoint") {
       result = await fetchDataOrError(
         MetabaseApi.datasetEndpoint(
           {
@@ -414,7 +436,10 @@ export const fetchDashboardCardData =
     const nonVirtualDashcards = getCurrentTabDashboardCards(
       dashboard,
       selectedTabId,
-    ).filter(({ dashcard }) => !isVirtualDashCard(dashcard));
+    ).filter(
+      ({ dashcard }) =>
+        !isVirtualDashCard(dashcard) || dashcard.visualization_settings.iframe,
+    );
 
     let nonVirtualDashcardsToFetch = [];
     if (isRefreshing) {

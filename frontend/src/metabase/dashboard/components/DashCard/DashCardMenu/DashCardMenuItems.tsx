@@ -17,12 +17,14 @@ type DashCardMenuItemsProps = {
   result: Dataset;
   isDownloadingData: boolean;
   onDownload: () => void;
+  onFullScreen: () => void;
 };
 export const DashCardMenuItems = ({
   question,
   result,
   isDownloadingData,
   onDownload,
+  onFullScreen,
 }: DashCardMenuItemsProps) => {
   const dispatch = useDispatch();
 
@@ -85,7 +87,13 @@ export const DashCardMenuItems = ({
         closeMenuOnClick: false,
       });
     }
-
+    items.push({
+      key: "MB_FULLSCREEN",
+      iconName: "expand",
+      label: t`Enter fullscreen`,
+      onClick: onFullScreen,
+      closeMenuOnClick: true,
+    });
     if (customItems) {
       items.push(
         ...customItems.map(item => {

@@ -104,7 +104,9 @@ export function PublicOrEmbeddedDashboardView({
   DashboardRefreshPeriodControls &
   DashboardNightModeControls &
   DashboardFullscreenControls) {
-  const buttons = !isWithinIframe() ? (
+  const searchParams = new URLSearchParams(window.location.search);
+  const hiddenToolbar = searchParams.get("hiddenToolbar");
+  const buttons = !hiddenToolbar ? (
     <DashboardHeaderButtonRow
       canResetFilters={false}
       onResetFilters={_.noop}
@@ -114,7 +116,7 @@ export function PublicOrEmbeddedDashboardView({
       onFullscreenChange={onFullscreenChange}
       setRefreshElapsedHook={setRefreshElapsedHook}
       isFullscreen={isFullscreen}
-      hasNightModeToggle={hasNightModeToggle}
+      hasNightModeToggle={false}
       onNightModeChange={onNightModeChange}
       isNightMode={isNightMode}
       isPublic={true}

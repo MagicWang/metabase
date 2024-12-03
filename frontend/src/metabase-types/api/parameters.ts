@@ -60,7 +60,7 @@ export interface ParameterValuesConfig {
   values_source_config?: ValuesSourceConfig;
 }
 
-export type ValuesQueryType = "list" | "search" | "none";
+export type ValuesQueryType = "list" | "search" | "cascader" | "none";
 
 export type ValuesSourceType = null | "card" | "static-list";
 

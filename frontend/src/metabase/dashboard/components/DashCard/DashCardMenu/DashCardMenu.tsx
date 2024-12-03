@@ -1,6 +1,7 @@
 import { useDisclosure } from "@mantine/hooks";
 import cx from "classnames";
 import { isValidElement, useState } from "react";
+import screenfull from "screenfull";
 
 import type { SdkPluginsConfig } from "embedding-sdk";
 import { useInteractiveDashboardContext } from "embedding-sdk/components/public/InteractiveDashboard/context";
@@ -95,7 +96,12 @@ export const DashCardMenu = ({
   if (isDashCardMenuEmpty(plugins)) {
     return null;
   }
-
+  const onFullscreenChange = () => {
+    const ele = document.querySelector(`[data-dashcard-key='${dashcardId}']`);
+    if (ele) {
+      screenfull.request(ele);
+    }
+  };
   const getMenuContent = () => {
     if (typeof plugins?.dashboard?.dashcardMenu === "function") {
       return plugins.dashboard.dashcardMenu({ question: question.card() });
@@ -124,6 +130,7 @@ export const DashCardMenu = ({
         result={result}
         isDownloadingData={isDownloadingData}
         onDownload={() => setMenuView("download")}
+        onFullScreen={onFullscreenChange}
       />
     );
   };

@@ -8,7 +8,7 @@ export const DEFAULT_EMBED_OPTIONS: EmbedOptions = {
   top_nav: true,
   side_nav: "default",
   search: false,
-  new_button: false,
+  new_button: true,
   breadcrumbs: true,
   logo: true,
   header: true,

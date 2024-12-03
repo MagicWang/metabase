@@ -35,13 +35,16 @@ import { Provider } from "react-redux";
 import { Router, useRouterHistory } from "react-router";
 import { syncHistoryWithStore } from "react-router-redux";
 
+import { system } from "metabase/axios";
 import { createTracker } from "metabase/lib/analytics";
 import api from "metabase/lib/api";
 import { initializeEmbedding } from "metabase/lib/embed";
 import { captureConsoleErrors } from "metabase/lib/errors";
 import MetabaseSettings from "metabase/lib/settings";
 import { PLUGIN_APP_INIT_FUNCTIONS } from "metabase/plugins";
+import { setTempSetting } from "metabase/redux/app";
 import { refreshSiteSettings } from "metabase/redux/settings";
+import { SessionApi } from "metabase/services";
 import { EmotionCacheProvider } from "metabase/styled-components/components/EmotionCacheProvider";
 import { GlobalStyles } from "metabase/styled-components/containers/GlobalStyles";
 import { ThemeProvider } from "metabase/ui";
@@ -59,7 +62,7 @@ const browserHistory = useRouterHistory(createHistory)({
   basename: BASENAME,
 });
 
-function _init(reducers, getRoutes, callback) {
+async function _init(reducers, getRoutes, callback) {
   const store = getStore(reducers, browserHistory);
   const routes = getRoutes(store);
   const history = syncHistoryWithStore(browserHistory, store);
@@ -67,6 +70,16 @@ function _init(reducers, getRoutes, callback) {
   createTracker(store);
 
   initializeEmbedding(store);
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const autoLogin = searchParams.get("autoLogin");
+  if (autoLogin) {
+    await SessionApi.create({
+      username: "test@witlink.com",
+      password: "witlink123",
+      remember: true,
+    });
+  }
 
   const root = createRoot(document.getElementById("root"));
 
@@ -93,6 +106,17 @@ function _init(reducers, getRoutes, callback) {
   window.Metabase.store = store;
   window.Metabase.settings = MetabaseSettings;
 
+  const token = searchParams.get("token");
+  if (token) {
+    store.dispatch(setTempSetting({ key: "token", value: token }));
+    system.getDeptList({ sync: true }).then(res => {
+      if (res.code === 0) {
+        store.dispatch(
+          setTempSetting({ key: "deptOptions", value: res.result }),
+        );
+      }
+    });
+  }
   if (callback) {
     callback(store);
   }

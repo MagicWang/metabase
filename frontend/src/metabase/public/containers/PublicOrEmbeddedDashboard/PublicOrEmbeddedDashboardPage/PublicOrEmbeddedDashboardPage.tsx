@@ -1,4 +1,6 @@
+import { useCallback, useState } from "react";
 import type { WithRouterProps } from "react-router";
+import screenfull from "screenfull";
 
 import {
   useDashboardUrlParams,
@@ -32,11 +34,11 @@ export const PublicOrEmbeddedDashboardPage = (props: WithRouterProps) => {
     hasNightModeToggle,
     downloadsEnabled,
     hideParameters,
-    isFullscreen,
+    // isFullscreen,
     isNightMode,
     onNightModeChange,
     refreshPeriod,
-    onFullscreenChange,
+    // onFullscreenChange,
     setRefreshElapsedHook,
     onRefreshPeriodChange,
     theme,
@@ -49,6 +51,25 @@ export const PublicOrEmbeddedDashboardPage = (props: WithRouterProps) => {
 
   const dashboard = useSelector(getDashboardComplete);
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  screenfull.onchange(() => {
+    setIsFullscreen(screenfull.isFullscreen);
+  });
+  const onFullscreenChange = useCallback(
+    (
+      nextIsFullscreen: boolean | null,
+      openInBrowserFullscreen: boolean = true,
+    ) => {
+      if (nextIsFullscreen === isFullscreen) {
+        return;
+      }
+      if (isFullscreen || (nextIsFullscreen && openInBrowserFullscreen)) {
+        screenfull.toggle();
+      }
+      setIsFullscreen(nextIsFullscreen ?? false);
+    },
+    [isFullscreen],
+  );
   return (
     <>
       <SetTitle title={dashboard?.name} />

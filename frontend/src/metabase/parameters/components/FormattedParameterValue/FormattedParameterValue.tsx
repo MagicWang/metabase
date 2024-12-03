@@ -37,9 +37,19 @@ function FormattedParameterValue({
     value => getValue(value)?.toString() === first?.toString(),
   );
 
-  const label = getLabel(displayValue);
-
+  let label = getLabel(displayValue);
+  if (
+    parameter.values_query_type === "cascader" &&
+    (value as any).length === 1
+  ) {
+    const deptOptions = (window as any).Metabase.store.getState().app
+      .tempStorage.deptOptions;
+    label = recursionLabel(first, deptOptions);
+  }
   const renderContent = () => {
+    if (label) {
+      return <span>{formatParameterValue(label, parameter)}</span>;
+    }
     if (
       isFieldFilterUiParameter(parameter) &&
       hasFields(parameter) &&
@@ -53,11 +63,6 @@ function FormattedParameterValue({
         />
       );
     }
-
-    if (label) {
-      return <span>{formatParameterValue(label, parameter)}</span>;
-    }
-
     return <span>{formatParameterValue(value, parameter)}</span>;
   };
 
@@ -94,6 +99,22 @@ function getLabel(
   }
   return value?.toString();
 }
-
+function recursionLabel(value: any, arr: Array<any>): any {
+  let label;
+  if (arr?.length) {
+    for (let i = 0; i < arr.length; i++) {
+      const element = arr[i];
+      if (element.value === value) {
+        label = element.label;
+      } else if (element.children?.length) {
+        label = recursionLabel(value, element.children);
+      }
+      if (label) {
+        break;
+      }
+    }
+  }
+  return label;
+}
 // eslint-disable-next-line import/no-default-export -- deprecated usage
 export default FormattedParameterValue;

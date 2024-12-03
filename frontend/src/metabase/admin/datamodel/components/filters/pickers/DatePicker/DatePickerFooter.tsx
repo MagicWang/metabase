@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import moment from "moment-timezone"; // eslint-disable-line no-restricted-imports -- deprecated usage
 import type * as React from "react";
 import { t } from "ttag";
@@ -66,7 +67,15 @@ const DatePickerFooter: React.FC<React.PropsWithChildren<Props>> = ({
       ]);
     }
   };
-
+  const onClickToday = () => {
+    const now = dayjs();
+    const start = setTimeComponent(
+      now.format("YYYY-MM-DD"),
+      now.hour(),
+      now.minute(),
+    );
+    onFilterChange([operator, field, start]);
+  };
   if (
     operator === "time-interval" &&
     (startValue === "current" || startValue === null)
@@ -101,6 +110,9 @@ const DatePickerFooter: React.FC<React.PropsWithChildren<Props>> = ({
 
   return (
     <Container>
+      {operator === "=" ? (
+        <ToggleButton onClick={onClickToday}>{t`Today`}</ToggleButton>
+      ) : null}
       {content || <div />}
       {children}
     </Container>

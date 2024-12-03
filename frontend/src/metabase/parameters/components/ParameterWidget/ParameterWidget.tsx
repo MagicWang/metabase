@@ -94,7 +94,16 @@ export const ParameterWidget = ({
   const isEditingParameter = editingParameter?.id === parameter.id;
   const fieldHasValueOrFocus = parameter.value != null || isFocused;
   const legend = fieldHasValueOrFocus ? parameter.name : "";
-
+  const searchParams = new URLSearchParams(window.location.search);
+  const hiddenFilter = searchParams.get("hiddenFilter");
+  if (hiddenFilter) {
+    return null;
+  } else {
+    const hiddenFields = searchParams.get("hiddenFields");
+    if (hiddenFields?.split(",").includes(parameter.name)) {
+      return null;
+    }
+  }
   if (!isEditing || !setEditingParameter) {
     return (
       <Box fz={isFullscreen ? "md" : undefined}>

@@ -57,6 +57,12 @@ export function ValuesSourceSettings({
             onEditClick={openModal}
           />
           <RadioContainer
+            ownValue="cascader"
+            selectedValue={queryType}
+            label={t`Cascader`}
+            hideEdit
+          />
+          <RadioContainer
             ownValue="none"
             selectedValue={queryType}
             label={t`Input box`}

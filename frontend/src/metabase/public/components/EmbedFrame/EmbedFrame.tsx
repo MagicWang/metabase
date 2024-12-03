@@ -178,9 +178,12 @@ export const EmbedFrame = ({
                     />
                   )}
                   <Box style={{ flex: 1 }} />
-                  {dashboard && downloadsEnabled && (
-                    <ExportAsPdfButton dashboard={dashboard} color="brand" />
+                  {actionButtons && (
+                    <ActionButtonsContainer>{actionButtons}</ActionButtonsContainer>
                   )}
+                  {/* {dashboard && downloadsEnabled && (
+                    <ExportAsPdfButton dashboard={dashboard} color="brand" />
+                  )} */}
                 </TitleAndButtonsContainer>
               </TitleAndDescriptionContainer>
             )}
@@ -236,7 +239,7 @@ export const EmbedFrame = ({
         )}
         <Body>{children}</Body>
       </ContentContainer>
-      {showFooter && (
+      {/* {showFooter && (
         <Footer
           className={EmbedFrameS.EmbedFrameFooter}
           variant={footerVariant}
@@ -246,7 +249,7 @@ export const EmbedFrame = ({
             <ActionButtonsContainer>{actionButtons}</ActionButtonsContainer>
           )}
         </Footer>
-      )}
+      )} */}
     </Root>
   );
 };

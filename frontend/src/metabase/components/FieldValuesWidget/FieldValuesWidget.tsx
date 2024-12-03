@@ -1,4 +1,5 @@
 import { useElementSize } from "@mantine/hooks";
+import { Cascader } from "antd";
 import cx from "classnames";
 import type { StyleHTMLAttributes } from "react";
 import {
@@ -15,6 +16,7 @@ import { jt, t } from "ttag";
 import _ from "underscore";
 
 import ErrorBoundary from "metabase/ErrorBoundary";
+import { useTempStorage } from "metabase/common/hooks";
 import { ListField } from "metabase/components/ListField";
 import LoadingSpinner from "metabase/components/LoadingSpinner";
 import SingleSelectListField from "metabase/components/SingleSelectListField";
@@ -168,6 +170,7 @@ export function FieldValuesWidgetInner({
   const isListMode =
     !disableList &&
     (shouldList({ parameter, fields, disableSearch }) || isSingleValueSearch);
+  const isCascaderMode = parameter?.values_query_type === "cascader";
 
   const previousWidth = usePrevious(width);
 
@@ -591,6 +594,17 @@ export function FieldValuesWidgetInner({
 
   const isSimpleInput =
     !multi && (!parameter || parameter.values_query_type === "none");
+  let cValue: any = [];
+  const [cascaderOptions] = useTempStorage("deptOptions");
+  if (isCascaderMode) {
+    cValue = value.map(l => recursionValue(l, cascaderOptions));
+  }
+  const [cascaderValue, setCascaderValue] = useState(cValue);
+  const onMultipleChange = (v: any, selectedOptions: any) => {
+    setCascaderValue(v);
+    const nodes = selectedOptions.map((l: any) => l[l.length - 1].value);
+    onChange(nodes);
+  };
 
   return (
     <ErrorBoundary>
@@ -601,7 +615,14 @@ export function FieldValuesWidgetInner({
         maw={maxWidth ?? undefined}
         miw={minWidth ?? undefined}
       >
-        {isInitiliazing ? (
+        {isCascaderMode ? (
+          <Cascader.Panel
+            multiple
+            value={cascaderValue}
+            options={cascaderOptions}
+            onChange={onMultipleChange}
+          />
+        ) : isInitiliazing ? (
           <Flex p="md" align="center" justify="center">
             <LoadingSpinner size={24} />
           </Flex>
@@ -824,3 +845,22 @@ export const ItemWrapper = forwardRef<HTMLDivElement, SelectItemProps>(
     );
   },
 );
+
+function recursionValue(value: any, arr: Array<any>): any[] {
+  let result: any = [];
+  if (arr?.length) {
+    for (let i = 0; i < arr.length; i++) {
+      const element = arr[i];
+      if (element.value === value) {
+        return [value];
+      } else if (element.children?.length) {
+        const cResult = recursionValue(value, element.children);
+        if (cResult?.length) {
+          result = [element.value, ...cResult];
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}

@@ -281,6 +281,10 @@ export type VisualizationSettings = {
 
 export type EmbedVisualizationSettings = {
   iframe?: string;
+  hiddenToolbar?: boolean;
+  hiddenFilter?: boolean;
+  customDateRange?: boolean;
+  customTimeGroup?: boolean;
 };
 
 export type VisualizationSettingKey = keyof VisualizationSettings;

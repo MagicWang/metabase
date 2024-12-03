@@ -1,3 +1,5 @@
+import { DatePicker, Form, Radio, Switch } from "antd";
+const { RangePicker } = DatePicker;
 import { useCallback, useMemo } from "react";
 import { jt, t } from "ttag";
 import _ from "underscore";
@@ -16,6 +18,7 @@ import type {
 } from "metabase-types/api";
 
 import {
+  CustomBtnsWrapper,
   IFrameEditWrapper,
   IFrameWrapper,
   InteractiveText,
@@ -60,14 +63,24 @@ export function IFrameViz({
     () => getAllowedIframeAttributes(iframeOrUrl),
     [iframeOrUrl],
   );
-
+  const regexpArr = /src="(\S*)"/.exec(iframeOrUrl || "");
+  let iframeUrl = regexpArr?.length ? regexpArr[1] : "";
   const handleIFrameChange = useCallback(
     (newIFrame: string) => {
-      onUpdateVisualizationSettings({ iframe: newIFrame });
+      iframeUrl = newIFrame;
+      onUpdateVisualizationSettings({
+        iframe: `<iframe src="${newIFrame}" />`,
+      });
     },
     [onUpdateVisualizationSettings],
   );
-
+  const handleFormChange = useCallback(
+    (allValues: any) => {
+      onUpdateVisualizationSettings(allValues);
+    },
+    [onUpdateVisualizationSettings],
+  );
+  const [form] = Form.useForm();
   if (isEditing && !isEditingParameter && !isPreviewing) {
     return (
       <IFrameEditWrapper>
@@ -96,13 +109,51 @@ export function IFrameViz({
                   height: "100%",
                 },
               }}
-              h="100%"
-              value={iframeOrUrl ?? ""}
-              placeholder={`<iframe src="https://example.com" />`}
+              h="50%"
+              value={iframeUrl}
+              placeholder={`https://example.com`}
               onChange={e => handleIFrameChange(e.target.value)}
               onMouseDown={e => e.stopPropagation()}
               style={{ pointerEvents: "all" }}
             />
+            <Form
+              style={{ marginTop: "8px" }}
+              form={form}
+              layout="inline"
+              initialValues={dashcard.visualization_settings}
+              onValuesChange={(_, allValues) => {
+                handleFormChange(allValues);
+              }}
+            >
+              <Form.Item
+                name="hiddenToolbar"
+                label={t`Hidden Toolbar`}
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <Form.Item
+                name="hiddenFilter"
+                label={t`Hidden Filter`}
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <Form.Item
+                name="customDateRange"
+                label={t`Custom Date Range`}
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <Form.Item
+                name="customTimeGroup"
+                label={t`Custom Time Group`}
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+            </Form>
           </Box>
         </Stack>
       </IFrameEditWrapper>
@@ -112,14 +163,46 @@ export function IFrameViz({
 
   const hasAllowedIFrameUrl = src && isAllowedIframeUrl(src, allowedHosts);
   const hasForbiddenIFrameUrl = src && !isAllowedIframeUrl(src, allowedHosts);
+  const hiddenToolbar = src && dashcard.visualization_settings.hiddenToolbar;
+  const hiddenFilter = src && dashcard.visualization_settings.hiddenFilter;
+  const hasCustomDateRange =
+    src && dashcard.visualization_settings.customDateRange;
+  const hasCustomTimeGroup =
+    src && dashcard.visualization_settings.customTimeGroup;
 
+  const url = new URL(src || "");
+  if (hiddenToolbar) {
+    url.searchParams.set("hiddenToolbar", "true");
+  } else {
+    url.searchParams.delete("hiddenToolbar");
+  }
+  if (hiddenFilter) {
+    url.searchParams.set("hiddenFilter", "true");
+  } else {
+    url.searchParams.delete("hiddenFilter");
+  }
+  const token = (window as any).Metabase.store.getState().app.tempStorage.token;
+  url.searchParams.set("token", token || "");
+  const iframeUrl1 = new URL(iframeUrl || "");
+  const onDateChange = (dates: any, dateStrings: any) => {
+    if (dates) {
+      iframeUrl1.searchParams.set("date_range", dateStrings.join("~"));
+    } else {
+      iframeUrl1.searchParams.delete("date_range");
+    }
+    handleIFrameChange(iframeUrl1.href);
+  };
+  const onRadioChange = (e: any) => {
+    url.searchParams.set("time_grouping", e.target.value);
+    // iframeUrl1.searchParams.set("time_grouping", e.target.value);
+    handleIFrameChange(iframeUrl);
+  };
   const renderError = () => {
     if (hasForbiddenIFrameUrl && isEditing) {
       return <ForbiddenDomainError url={src} />;
     }
     return <GenericError />;
   };
-
   return (
     <IFrameWrapper data-testid="iframe-card" fade={isEditingParameter}>
       {hasAllowedIFrameUrl ? (
@@ -131,10 +214,26 @@ export function IFrameViz({
           sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
           referrerPolicy="strict-origin-when-cross-origin"
           {...allowedIframeAttributes}
+          src={url.href}
         />
       ) : (
         renderError()
       )}
+      <CustomBtnsWrapper>
+        {hasCustomDateRange ? <RangePicker onChange={onDateChange} /> : null}
+        {hasCustomTimeGroup ? (
+          <Radio.Group
+            defaultValue="month"
+            optionType="button"
+            buttonStyle="solid"
+            onChange={onRadioChange}
+          >
+            <Radio.Button value="month">{t`month`}</Radio.Button>
+            <Radio.Button value="quarter">{t`quarter`}</Radio.Button>
+            <Radio.Button value="year">{t`year`}</Radio.Button>
+          </Radio.Group>
+        ) : null}
+      </CustomBtnsWrapper>
     </IFrameWrapper>
   );
 }

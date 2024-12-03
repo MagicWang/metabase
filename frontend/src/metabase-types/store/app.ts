@@ -23,6 +23,8 @@ export interface AppBreadCrumbs {
  */
 export type TempStorage = {
   "last-opened-onboarding-checklist-item": ChecklistItemValue | undefined;
+  token: string;
+  deptOptions: Array<any>;
 };
 
 export type TempStorageKey = keyof TempStorage;

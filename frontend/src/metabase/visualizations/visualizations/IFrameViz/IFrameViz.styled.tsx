@@ -40,3 +40,9 @@ export const SaveButton = styled(Button)`
 export const InteractiveText = styled(Text)<TextProps>`
   ${interactiveDashcardElementCss}
 `;
+
+export const CustomBtnsWrapper = styled.div`
+  position: absolute;
+  right: 16px;
+  top: 12px;
+`;
